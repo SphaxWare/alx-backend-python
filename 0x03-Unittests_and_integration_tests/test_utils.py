@@ -5,6 +5,7 @@ from parameterized import parameterized
 from utils import access_nested_map
 from utils import get_json
 from unittest.mock import patch, Mock
+from utils import memoize
 
 
 class TestAccessNestedMap(unittest.TestCase):
@@ -28,6 +29,7 @@ class TestAccessNestedMap(unittest.TestCase):
             access_nested_map(nested_map, path)
         self.assertEqual(str(cm.exception), f"'{path[-1]}'")
 
+
 class TestGetJson(unittest.TestCase):
     """Test Json"""
     @parameterized.expand([
@@ -48,6 +50,37 @@ class TestGetJson(unittest.TestCase):
 
         # Check that requests.get was called once with the test_url
         mock_get.assert_called_once_with(test_url)
+
+
+class TestClass:
+    """Test class"""
+    def a_method(self):
+        """a method"""
+        return 42
+
+    @memoize
+    def a_property(self):
+        """property"""
+        return self.a_method()
+
+
+class TestMemoize(unittest.TestCase):
+    """Test memoize"""
+    @patch.object(TestClass, 'a_method', return_value=42)
+    def test_memoize(self, mock_a_method):
+        """test"""
+        test_instance = TestClass()
+
+        # Call a_property twice
+        result1 = test_instance.a_property
+        result2 = test_instance.a_property
+
+        # Check the results
+        self.assertEqual(result1, 42)
+        self.assertEqual(result2, 42)
+
+        # Ensure a_method was called only once
+        mock_a_method.assert_called_once()
 
 
 if __name__ == "__main__":
